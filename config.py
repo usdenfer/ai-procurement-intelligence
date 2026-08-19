@@ -16,7 +16,7 @@ def embedding_base_url() -> str:
 
 
 def embedding_model() -> str:
-    return os.environ.get("EMBEDDING_MODEL", "bge-large-zh")
+    return os.environ.get("EMBEDDING_MODEL", "BAAI/bge-large-zh-v1.5")
 
 
 def embedding_api_key() -> str:

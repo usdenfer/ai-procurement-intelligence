@@ -8,7 +8,7 @@ def test_embedding_defaults(monkeypatch):
     monkeypatch.delenv("EMBEDDING_API_KEY", raising=False)
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     assert config.embedding_base_url() == "https://api.vectorengine.cn/v1"
-    assert config.embedding_model() == "bge-large-zh"
+    assert config.embedding_model() == "BAAI/bge-large-zh-v1.5"
     assert config.embedding_api_key() == ""
 
 
