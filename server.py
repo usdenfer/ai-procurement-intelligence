@@ -13,6 +13,8 @@ from pydantic import BaseModel
 from config import schedule_enabled as _cfg_schedule_enabled
 from config import schedule_time as _cfg_schedule_time
 
+import settings_store
+
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 _ingest_state: dict = {
@@ -26,13 +28,18 @@ _ingest_state: dict = {
     "errors": 0,
 }
 
-_initial_hour, _initial_minute = _cfg_schedule_time()
-_settings: dict = {
-    "keywords": [],
-    "start_urls": [],
-    "schedule_enabled": _cfg_schedule_enabled(),
-    "schedule_time": f"{_initial_hour:02d}:{_initial_minute:02d}",
-}
+
+def _default_settings() -> dict:
+    hour, minute = _cfg_schedule_time()
+    return {
+        "keywords": [],
+        "start_urls": [],
+        "schedule_enabled": _cfg_schedule_enabled(),
+        "schedule_time": f"{hour:02d}:{minute:02d}",
+    }
+
+
+_settings: dict = settings_store.load(_default_settings())
 
 
 def _parse_time(value: str) -> tuple[int, int]:
@@ -153,6 +160,7 @@ async def update_settings(req: SettingsUpdate) -> dict:
     if req.schedule_time is not None:
         hour, minute = _parse_time(req.schedule_time)
         _settings["schedule_time"] = f"{hour:02d}:{minute:02d}"
+    settings_store.save(_settings)
     return {**_settings, "next_run": _next_run()}
 
 
