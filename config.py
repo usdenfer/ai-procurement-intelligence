@@ -43,3 +43,15 @@ def query_types() -> tuple[str, ...]:
     raw = os.environ.get("AI_PROC_QUERY_TYPES", "")
     types = tuple(t.strip() for t in raw.split(",") if t.strip())
     return types or DEFAULT_QUERY_TYPES
+
+
+DEFAULT_RECENT_DAYS = 30
+
+
+def recent_days() -> int:
+    raw = os.environ.get("AI_PROC_RECENT_DAYS", "")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_RECENT_DAYS
+    return value if value > 0 else DEFAULT_RECENT_DAYS

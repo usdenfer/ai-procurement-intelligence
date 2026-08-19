@@ -35,7 +35,7 @@ async def yngp_pages(
     from discovery import discover_pages  # noqa: E402
     from discovery.urltools import normalize_candidate_url  # noqa: E402
 
-    from config import query_types, search_keywords  # noqa: E402
+    from config import query_types, recent_days, search_keywords  # noqa: E402
 
     if keywords is None:
         keywords = search_keywords()
@@ -43,6 +43,7 @@ async def yngp_pages(
     discovery_run = await discover_pages(
         YNGP_START, keywords, base_result, 1, "auto",
         query_types=query_types(),
+        recent_days=recent_days(),
     )
 
     meta = {}

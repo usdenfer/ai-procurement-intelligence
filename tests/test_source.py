@@ -56,6 +56,7 @@ def test_yngp_pages_forwards_keywords_and_uses_candidate_meta(monkeypatch):
                             render_mode, **kwargs):
         assert keywords == ["大学", "学院"]
         assert kwargs["query_types"] == ("23", "1", "3")
+        assert kwargs["recent_days"] == 30
         assert base_result.pages[0].url == homepage.url
         return discovery.DiscoveryRun(
             pages=[article], failed=[], stats=DiscoveryStats(),

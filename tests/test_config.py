@@ -63,3 +63,20 @@ def test_query_types_default(monkeypatch):
 def test_query_types_env_override(monkeypatch):
     monkeypatch.setenv("AI_PROC_QUERY_TYPES", " 23 , 1 ")
     assert config.query_types() == ("23", "1")
+
+
+def test_recent_days_default(monkeypatch):
+    monkeypatch.delenv("AI_PROC_RECENT_DAYS", raising=False)
+    assert config.recent_days() == 30
+
+
+def test_recent_days_env_override(monkeypatch):
+    monkeypatch.setenv("AI_PROC_RECENT_DAYS", "90")
+    assert config.recent_days() == 90
+
+
+def test_recent_days_invalid_falls_back(monkeypatch):
+    monkeypatch.setenv("AI_PROC_RECENT_DAYS", "bad")
+    assert config.recent_days() == 30
+    monkeypatch.setenv("AI_PROC_RECENT_DAYS", "0")
+    assert config.recent_days() == 30
