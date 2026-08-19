@@ -41,6 +41,7 @@ async def _discover_pages(start_url, keywords):
 async def pages(
     keywords: list[str] | None = None,
     on_progress=None,
+    start_urls: list[str] | None = None,
 ) -> AsyncIterator[tuple[str, str, str, str]]:
     """Yield (url, html, title, published_date) across all configured sources.
 
@@ -49,13 +50,16 @@ async def pages(
     标题与发布日期取自候选元数据（Candidate.title_hint / published_date），
     详情页 <title> 仅作回退。
     on_progress(dict) 在发现前/后各回调一次，用于报告阶段与候选数。
+    start_urls 为空或 None 时回退到配置默认。
     """
-    from config import search_keywords, start_urls
+    from config import search_keywords
+    from config import start_urls as default_start_urls
 
     if keywords is None:
         keywords = search_keywords()
+    urls = list(start_urls) if start_urls else default_start_urls()
 
-    for start_url in start_urls():
+    for start_url in urls:
         if on_progress is not None:
             on_progress({"phase": "discovering", "candidates_found": 0})
         discovery_run = await _discover_pages(start_url, keywords)

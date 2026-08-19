@@ -31,6 +31,10 @@
     .sources a { color:var(--blue); display:block; word-break:break-all; }
     .row { display:flex; gap:12px; align-items:flex-start; }
     .row input { flex:1; margin-bottom:0; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:14px; color:var(--muted); margin-bottom:6px; }
+    .switch-label { font-size:14px; display:flex; align-items:center; gap:6px; margin-right:12px; white-space:nowrap; }
+    .switch-label input { margin:0; }
   </style>
 </head>
 <body>
@@ -43,6 +47,28 @@
         <button id="ingestBtn">开始入库</button>
         <div class="status" id="ingestStatus"></div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>设置</h2>
+      <div class="field">
+        <label>关键词（逗号/空格分隔，留空用默认）</label>
+        <input type="text" id="kwInput" placeholder="大学, 学院, 高校, 学校, 职业院校, 高职">
+      </div>
+      <div class="field">
+        <label>搜索网址（逗号分隔，留空用默认）</label>
+        <input type="text" id="urlInput" placeholder="http://www.yngp.com/">
+      </div>
+      <div class="field">
+        <label>定时入库</label>
+        <div class="row" style="align-items:center">
+          <label class="switch-label"><input type="checkbox" id="scheduleOn"> 开启</label>
+          <input type="text" id="scheduleTime" placeholder="17:00" style="width:110px;margin-bottom:0">
+        </div>
+      </div>
+      <div class="status" id="scheduleInfo"></div>
+      <div style="margin-top:12px"><button id="saveSettingsBtn">保存设置</button></div>
+      <div class="status" id="settingsStatus"></div>
     </div>
 
     <div class="card">
@@ -67,6 +93,46 @@
         $("docCount").textContent = d.documents;
       } catch (e) { /* ignore */ }
     }
+
+    function parseList(text) {
+      return text.split(/[,，\s]+/).filter(Boolean);
+    }
+
+    async function loadSettings() {
+      try {
+        const r = await fetch("/api/settings");
+        const d = await r.json();
+        $("kwInput").value = (d.keywords || []).join(", ");
+        $("urlInput").value = (d.start_urls || []).join(", ");
+        $("scheduleOn").checked = !!d.schedule_enabled;
+        $("scheduleTime").value = d.schedule_time || "17:00";
+        $("scheduleInfo").textContent = d.schedule_enabled
+          ? "已开启，下次执行：" + d.next_run
+          : "已关闭";
+      } catch (e) { /* ignore */ }
+    }
+
+    $("saveSettingsBtn").addEventListener("click", async () => {
+      try {
+        const r = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            keywords: parseList($("kwInput").value),
+            start_urls: parseList($("urlInput").value),
+            schedule_enabled: $("scheduleOn").checked,
+            schedule_time: $("scheduleTime").value.trim(),
+          }),
+        });
+        const d = await r.json();
+        $("settingsStatus").textContent = "已保存";
+        $("scheduleInfo").textContent = d.schedule_enabled
+          ? "已开启，下次执行：" + d.next_run
+          : "已关闭";
+      } catch (e) {
+        $("settingsStatus").textContent = "保存失败：" + e.message;
+      }
+    });
 
     async function pollIngest() {
       while (true) {
@@ -141,6 +207,7 @@
     });
 
     refreshStats();
+    loadSettings();
   </script>
 </body>
 </html>

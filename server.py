@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from config import schedule_enabled, schedule_time
+from config import schedule_enabled as _cfg_schedule_enabled
+from config import schedule_time as _cfg_schedule_time
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -23,6 +25,33 @@ _ingest_state: dict = {
     "chunks": 0,
     "errors": 0,
 }
+
+_initial_hour, _initial_minute = _cfg_schedule_time()
+_settings: dict = {
+    "keywords": [],
+    "start_urls": [],
+    "schedule_enabled": _cfg_schedule_enabled(),
+    "schedule_time": f"{_initial_hour:02d}:{_initial_minute:02d}",
+}
+
+
+def _parse_time(value: str) -> tuple[int, int]:
+    try:
+        hour, minute = (int(part) for part in value.split(":"))
+    except (ValueError, TypeError):
+        return 17, 0
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return 17, 0
+    return hour, minute
+
+
+def _next_run() -> str:
+    hour, minute = _parse_time(_settings["schedule_time"])
+    now = datetime.now()
+    nxt = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if nxt <= now:
+        nxt += timedelta(days=1)
+    return nxt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _progress_cb(update: dict) -> None:
@@ -41,7 +70,11 @@ async def _run_ingest() -> None:
     )
     try:
         counts = await ingest(
-            pages(on_progress=_progress_cb),
+            pages(
+                keywords=_settings["keywords"] or None,
+                start_urls=_settings["start_urls"] or None,
+                on_progress=_progress_cb,
+            ),
             Store(),
             on_progress=_progress_cb,
         )
@@ -51,10 +84,11 @@ async def _run_ingest() -> None:
 
 
 async def _scheduler_loop() -> None:
-    from datetime import datetime, timedelta
-
-    hour, minute = schedule_time()
     while True:
+        if not _settings["schedule_enabled"]:
+            await asyncio.sleep(30)
+            continue
+        hour, minute = _parse_time(_settings["schedule_time"])
         now = datetime.now()
         next_run = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         if next_run <= now:
@@ -66,14 +100,11 @@ async def _scheduler_loop() -> None:
 
 @contextlib.asynccontextmanager
 async def lifespan(_app: FastAPI):
-    scheduler_task = None
-    if schedule_enabled():
-        scheduler_task = asyncio.create_task(_scheduler_loop())
+    scheduler_task = asyncio.create_task(_scheduler_loop())
     yield
-    if scheduler_task is not None:
-        scheduler_task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await scheduler_task
+    scheduler_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await scheduler_task
 
 
 app = FastAPI(title="AI 采购情报", lifespan=lifespan)
@@ -81,6 +112,13 @@ app = FastAPI(title="AI 采购情报", lifespan=lifespan)
 
 class AskRequest(BaseModel):
     question: str
+
+
+class SettingsUpdate(BaseModel):
+    keywords: list[str] | None = None
+    start_urls: list[str] | None = None
+    schedule_enabled: bool | None = None
+    schedule_time: str | None = None
 
 
 @app.get("/")
@@ -95,6 +133,27 @@ async def stats() -> dict:
     store = Store()
     row = store.conn.execute("SELECT COUNT(*) FROM documents").fetchone()
     return {"documents": row[0] if row else 0}
+
+
+@app.get("/api/settings")
+async def get_settings() -> dict:
+    return {**_settings, "next_run": _next_run()}
+
+
+@app.post("/api/settings")
+async def update_settings(req: SettingsUpdate) -> dict:
+    if req.keywords is not None:
+        _settings["keywords"] = [k.strip() for k in req.keywords if k.strip()]
+    if req.start_urls is not None:
+        _settings["start_urls"] = [
+            u.strip() for u in req.start_urls if u.strip()
+        ]
+    if req.schedule_enabled is not None:
+        _settings["schedule_enabled"] = req.schedule_enabled
+    if req.schedule_time is not None:
+        hour, minute = _parse_time(req.schedule_time)
+        _settings["schedule_time"] = f"{hour:02d}:{minute:02d}"
+    return {**_settings, "next_run": _next_run()}
 
 
 @app.post("/api/ingest")
