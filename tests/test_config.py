@@ -80,3 +80,19 @@ def test_recent_days_invalid_falls_back(monkeypatch):
     assert config.recent_days() == 30
     monkeypatch.setenv("AI_PROC_RECENT_DAYS", "0")
     assert config.recent_days() == 30
+
+
+def test_start_urls_default(monkeypatch):
+    monkeypatch.delenv("AI_PROC_START_URLS", raising=False)
+    assert config.start_urls() == ["http://www.yngp.com/"]
+
+
+def test_start_urls_env_override(monkeypatch):
+    monkeypatch.setenv(
+        "AI_PROC_START_URLS",
+        " http://www.yngp.com/ , https://www.zycg.gov.cn/ ",
+    )
+    assert config.start_urls() == [
+        "http://www.yngp.com/",
+        "https://www.zycg.gov.cn/",
+    ]

@@ -55,3 +55,12 @@ def recent_days() -> int:
     except (TypeError, ValueError):
         return DEFAULT_RECENT_DAYS
     return value if value > 0 else DEFAULT_RECENT_DAYS
+
+
+DEFAULT_START_URLS = ["http://www.yngp.com/"]
+
+
+def start_urls() -> list[str]:
+    raw = os.environ.get("AI_PROC_START_URLS", "")
+    urls = [u.strip() for u in raw.split(",") if u.strip()]
+    return urls or DEFAULT_START_URLS
