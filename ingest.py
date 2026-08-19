@@ -1,6 +1,8 @@
 """Orchestrate source -> clean -> chunk -> embed -> store."""
 from __future__ import annotations
 
+import logging
+
 from clean import clean_text
 from chunk import chunk_document
 from embed import embed
@@ -25,5 +27,6 @@ async def ingest(source, store: Store, embed_fn=embed) -> dict:
             counts["documents"] += 1
             counts["chunks"] += len(chunks)
         except Exception:
+            logging.exception("ingest failed for %s", url)
             counts["errors"] += 1
     return counts
