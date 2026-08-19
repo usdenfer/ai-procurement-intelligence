@@ -82,6 +82,15 @@ def test_recent_days_invalid_falls_back(monkeypatch):
     assert config.recent_days() == 30
 
 
+def test_max_windows_default_and_override(monkeypatch):
+    monkeypatch.delenv("AI_PROC_MAX_WINDOWS", raising=False)
+    assert config.max_windows() == 60
+    monkeypatch.setenv("AI_PROC_MAX_WINDOWS", "100")
+    assert config.max_windows() == 100
+    monkeypatch.setenv("AI_PROC_MAX_WINDOWS", "bad")
+    assert config.max_windows() == 60
+
+
 def test_start_urls_default(monkeypatch):
     monkeypatch.delenv("AI_PROC_START_URLS", raising=False)
     assert config.start_urls() == ["http://www.yngp.com/"]

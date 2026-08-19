@@ -57,6 +57,18 @@ def recent_days() -> int:
     return value if value > 0 else DEFAULT_RECENT_DAYS
 
 
+DEFAULT_MAX_WINDOWS = 60
+
+
+def max_windows() -> int:
+    raw = os.environ.get("AI_PROC_MAX_WINDOWS", "")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_MAX_WINDOWS
+    return value if value > 0 else DEFAULT_MAX_WINDOWS
+
+
 DEFAULT_START_URLS = ["http://www.yngp.com/"]
 
 
