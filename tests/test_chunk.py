@@ -26,3 +26,11 @@ def test_long_document_splits_by_paragraph():
 
 def test_blank_document_produces_no_chunks():
     assert chunk.chunk_document("https://x.test/c", "   \n  ") == []
+
+
+def test_single_long_paragraph_is_hard_split_under_limit():
+    text = "采购公告正文内容。" * 300  # ~2700 chars, no newlines
+    chunks = chunk.chunk_document("https://x.test/d", text)
+    assert len(chunks) > 1
+    assert all(len(c.text) <= chunk.MAX_CHUNK_CHARS for c in chunks)
+    assert "".join(c.text for c in chunks).replace("\n", "") == text

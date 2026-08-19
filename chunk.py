@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-MAX_CHUNK_CHARS = 1500
+MAX_CHUNK_CHARS = 500
 
 
 @dataclass
@@ -27,18 +27,17 @@ class Chunk:
 def _split_long_text(text: str, limit: int = MAX_CHUNK_CHARS) -> list[str]:
     if len(text) <= limit:
         return [text]
-    paragraphs = re.split(r"\n+", text)
+    paragraphs = [p.strip() for p in re.split(r"\n+", text) if p.strip()]
     parts: list[str] = []
     current = ""
     for para in paragraphs:
-        para = para.strip()
-        if not para:
-            continue
-        if current and len(current) + len(para) + 1 > limit:
-            parts.append(current)
-            current = para
-        else:
-            current = f"{current}\n{para}" if current else para
+        pieces = [para[i:i + limit] for i in range(0, len(para), limit)]
+        for piece in pieces:
+            if current and len(current) + len(piece) + 1 > limit:
+                parts.append(current)
+                current = piece
+            else:
+                current = f"{current}\n{piece}" if current else piece
     if current:
         parts.append(current)
     return parts
