@@ -73,8 +73,10 @@
 
     <div class="card">
       <h2>问答</h2>
-      <div class="row">
+      <div class="row" style="align-items:center">
         <input type="text" id="question" placeholder="输入问题，例如：近期有哪些高校设备采购项目？">
+        <span style="font-size:14px;color:#7a7a7a;white-space:nowrap">检索条数</span>
+        <input type="number" id="topK" value="20" min="1" max="100" style="width:70px;flex:none;margin-bottom:0">
         <button id="askBtn">提问</button>
       </div>
       <div class="status" id="askStatus"></div>
@@ -187,7 +189,10 @@
         const r = await fetch("/api/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: q }),
+          body: JSON.stringify({
+            question: q,
+            top_k: parseInt($("topK").value) || 20,
+          }),
         });
         const d = await r.json();
         $("askStatus").textContent = "";
