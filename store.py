@@ -80,10 +80,33 @@ class Store:
             metadatas=[c.metadata() for c in chunks],
         )
 
-    def query(self, vector: list[float], top_k: int) -> list[dict]:
+    def query(
+        self,
+        vector: list[float],
+        top_k: int,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> list[dict]:
+        def _date_num(value: str) -> int:
+            digits = "".join(ch for ch in value if ch.isdigit())
+            return int(digits[:8]) if len(digits) >= 8 else 0
+
+        where = None
+        if start_date and end_date:
+            where = {
+                "$and": [
+                    {"published_date_num": {"$gte": _date_num(start_date)}},
+                    {"published_date_num": {"$lte": _date_num(end_date)}},
+                ]
+            }
+        elif start_date:
+            where = {"published_date_num": {"$gte": _date_num(start_date)}}
+        elif end_date:
+            where = {"published_date_num": {"$lte": _date_num(end_date)}}
         result = self.collection.query(
             query_embeddings=[vector],
             n_results=top_k,
+            where=where,
             include=["documents", "metadatas", "distances"],
         )
         docs = result.get("documents") or [[]]

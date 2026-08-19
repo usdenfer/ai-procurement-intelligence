@@ -120,3 +120,11 @@ def ask_top_k() -> int:
     except (TypeError, ValueError):
         return DEFAULT_ASK_TOP_K
     return value if value > 0 else DEFAULT_ASK_TOP_K
+
+
+def start_date() -> str:
+    return os.environ.get("AI_PROC_START_DATE", "").strip()
+
+
+def end_date() -> str:
+    return os.environ.get("AI_PROC_END_DATE", "").strip()

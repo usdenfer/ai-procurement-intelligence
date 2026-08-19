@@ -35,3 +35,21 @@ def test_upsert_chunks_no_chunks_is_noop(tmp_path):
     s = make_store(tmp_path)
     s.upsert_chunks("doc", [], [])
     assert s.query([0.0, 0.0], top_k=1) == []
+
+
+def test_query_filters_by_date_range(tmp_path):
+    s = make_store(tmp_path)
+    doc1 = s.save_document("https://x.test/a", "a", "A", "2026-07-01")
+    doc2 = s.save_document("https://x.test/b", "b", "B", "2026-08-15")
+    s.upsert_chunks(doc1, [
+        Chunk(text="七月", url="https://x.test/a", title="A",
+              published_date="2026-07-01", index=0)],
+        [[1.0, 0.0]])
+    s.upsert_chunks(doc2, [
+        Chunk(text="八月", url="https://x.test/b", title="B",
+              published_date="2026-08-15", index=0)],
+        [[0.0, 1.0]])
+    results = s.query(
+        [0.0, 1.0], top_k=5, start_date="2026-08-01", end_date="2026-08-31"
+    )
+    assert [r["url"] for r in results] == ["https://x.test/b"]

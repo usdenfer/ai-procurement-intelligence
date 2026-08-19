@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from datetime import date
 
 from bs4 import BeautifulSoup
 
@@ -13,7 +14,17 @@ def _page_title(page) -> str:
     return ""
 
 
-async def _discover_pages(start_url, keywords):
+def _parse_date(value: str | None) -> date | None:
+    value = (value or "").strip()
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+async def _discover_pages(start_url, keywords, start_date=None, end_date=None):
     import _bootstrap
     _bootstrap.ensure_wkc()
 
@@ -35,6 +46,8 @@ async def _discover_pages(start_url, keywords):
         recent_days=recent_days(),
         max_windows_per_query=max_windows(),
         full_sweep=full_sweep(),
+        start_date=start_date,
+        end_date=end_date,
     )
 
 
@@ -42,6 +55,8 @@ async def pages(
     keywords: list[str] | None = None,
     on_progress=None,
     start_urls: list[str] | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> AsyncIterator[tuple[str, str, str, str, str]]:
     """Yield (url, html, title, published_date, district) across sources.
 
@@ -51,6 +66,7 @@ async def pages(
     / district），详情页 <title> 仅作回退。
     on_progress(dict) 在发现前/后各回调一次，用于报告阶段与候选数。
     start_urls 为空或 None 时回退到配置默认。
+    start_date/end_date 为 YYYY-MM-DD 字符串，限制抓取的公告日期范围。
     """
     from config import search_keywords
     from config import start_urls as default_start_urls
@@ -58,11 +74,15 @@ async def pages(
     if keywords is None:
         keywords = search_keywords()
     urls = list(start_urls) if start_urls else default_start_urls()
+    from_date = _parse_date(start_date)
+    to_date = _parse_date(end_date)
 
     for start_url in urls:
         if on_progress is not None:
             on_progress({"phase": "discovering", "candidates_found": 0})
-        discovery_run = await _discover_pages(start_url, keywords)
+        discovery_run = await _discover_pages(
+            start_url, keywords, from_date, to_date
+        )
         if on_progress is not None:
             on_progress({
                 "phase": "ingesting",

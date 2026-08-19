@@ -12,6 +12,8 @@ from pydantic import BaseModel
 
 from config import schedule_enabled as _cfg_schedule_enabled
 from config import schedule_time as _cfg_schedule_time
+from config import end_date as _cfg_end_date
+from config import start_date as _cfg_start_date
 
 import settings_store
 
@@ -36,6 +38,8 @@ def _default_settings() -> dict:
         "start_urls": [],
         "schedule_enabled": _cfg_schedule_enabled(),
         "schedule_time": f"{hour:02d}:{minute:02d}",
+        "start_date": _cfg_start_date(),
+        "end_date": _cfg_end_date(),
     }
 
 
@@ -80,6 +84,8 @@ async def _run_ingest() -> None:
             pages(
                 keywords=_settings["keywords"] or None,
                 start_urls=_settings["start_urls"] or None,
+                start_date=_settings.get("start_date") or None,
+                end_date=_settings.get("end_date") or None,
                 on_progress=_progress_cb,
             ),
             Store(),
@@ -120,6 +126,8 @@ app = FastAPI(title="AI 采购情报", lifespan=lifespan)
 class AskRequest(BaseModel):
     question: str
     top_k: int | None = None
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 class SettingsUpdate(BaseModel):
@@ -127,6 +135,8 @@ class SettingsUpdate(BaseModel):
     start_urls: list[str] | None = None
     schedule_enabled: bool | None = None
     schedule_time: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 @app.get("/")
@@ -161,6 +171,10 @@ async def update_settings(req: SettingsUpdate) -> dict:
     if req.schedule_time is not None:
         hour, minute = _parse_time(req.schedule_time)
         _settings["schedule_time"] = f"{hour:02d}:{minute:02d}"
+    if req.start_date is not None:
+        _settings["start_date"] = req.start_date.strip()
+    if req.end_date is not None:
+        _settings["end_date"] = req.end_date.strip()
     settings_store.save(_settings)
     return {**_settings, "next_run": _next_run()}
 
@@ -188,4 +202,10 @@ async def ask_endpoint(req: AskRequest) -> dict:
     if not question:
         return {"answer": "问题不能为空。", "sources": []}
     top_k = req.top_k if req.top_k and req.top_k > 0 else ask_top_k()
-    return await ask(question, Store(), top_k=top_k)
+    return await ask(
+        question,
+        Store(),
+        top_k=top_k,
+        start_date=req.start_date or None,
+        end_date=req.end_date or None,
+    )

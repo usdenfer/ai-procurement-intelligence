@@ -60,6 +60,14 @@
         <input type="text" id="urlInput" placeholder="http://www.yngp.com/">
       </div>
       <div class="field">
+        <label>时间区间（入库，留空用默认近 30 天）</label>
+        <div class="row" style="align-items:center">
+          <input type="date" id="startDateInput" style="flex:none">
+          <span style="color:#7a7a7a">至</span>
+          <input type="date" id="endDateInput" style="flex:none">
+        </div>
+      </div>
+      <div class="field">
         <label>定时入库</label>
         <div class="row" style="align-items:center">
           <label class="switch-label"><input type="checkbox" id="scheduleOn"> 开启</label>
@@ -78,6 +86,12 @@
         <span style="font-size:14px;color:#7a7a7a;white-space:nowrap">检索条数</span>
         <input type="number" id="topK" value="20" min="1" max="100" style="width:70px;flex:none;margin-bottom:0">
         <button id="askBtn">提问</button>
+      </div>
+      <div class="row" style="align-items:center;margin-top:8px">
+        <span style="font-size:14px;color:#7a7a7a;white-space:nowrap">时间区间</span>
+        <input type="date" id="qStartDate" style="flex:none">
+        <span style="color:#7a7a7a">至</span>
+        <input type="date" id="qEndDate" style="flex:none">
       </div>
       <div class="status" id="askStatus"></div>
       <div class="answer" id="answer" style="display:none"></div>
@@ -108,6 +122,8 @@
         $("urlInput").value = (d.start_urls || []).join(", ");
         $("scheduleOn").checked = !!d.schedule_enabled;
         $("scheduleTime").value = d.schedule_time || "17:00";
+        $("startDateInput").value = d.start_date || "";
+        $("endDateInput").value = d.end_date || "";
         $("scheduleInfo").textContent = d.schedule_enabled
           ? "已开启，下次执行：" + d.next_run
           : "已关闭";
@@ -124,6 +140,8 @@
             start_urls: parseList($("urlInput").value),
             schedule_enabled: $("scheduleOn").checked,
             schedule_time: $("scheduleTime").value.trim(),
+            start_date: $("startDateInput").value,
+            end_date: $("endDateInput").value,
           }),
         });
         const d = await r.json();
@@ -192,6 +210,8 @@
           body: JSON.stringify({
             question: q,
             top_k: parseInt($("topK").value) || 20,
+            start_date: $("qStartDate").value || null,
+            end_date: $("qEndDate").value || null,
           }),
         });
         const d = await r.json();

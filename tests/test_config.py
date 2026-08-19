@@ -152,3 +152,14 @@ def test_ask_top_k_default_and_override(monkeypatch):
     assert config.ask_top_k() == 20
     monkeypatch.setenv("AI_PROC_ASK_TOP_K", "0")
     assert config.ask_top_k() == 20
+
+
+def test_start_end_date(monkeypatch):
+    monkeypatch.delenv("AI_PROC_START_DATE", raising=False)
+    monkeypatch.delenv("AI_PROC_END_DATE", raising=False)
+    assert config.start_date() == ""
+    assert config.end_date() == ""
+    monkeypatch.setenv("AI_PROC_START_DATE", " 2026-07-01 ")
+    monkeypatch.setenv("AI_PROC_END_DATE", "2026-08-01")
+    assert config.start_date() == "2026-07-01"
+    assert config.end_date() == "2026-08-01"

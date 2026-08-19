@@ -7,6 +7,13 @@ from dataclasses import dataclass
 MAX_CHUNK_CHARS = 500
 
 
+def _date_to_num(value: str) -> int:
+    digits = "".join(ch for ch in value if ch.isdigit())
+    if len(digits) >= 8:
+        return int(digits[:8])
+    return 0
+
+
 @dataclass
 class Chunk:
     text: str
@@ -21,6 +28,7 @@ class Chunk:
             "url": self.url,
             "title": self.title,
             "published_date": self.published_date,
+            "published_date_num": _date_to_num(self.published_date),
             "chunk_index": self.index,
             "district": self.district,
         }
