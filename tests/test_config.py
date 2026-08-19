@@ -38,3 +38,18 @@ def test_data_dir_default_and_override(monkeypatch):
     assert config.data_dir() == "data"
     monkeypatch.setenv("AI_PROC_DATA_DIR", "D:/tmp/x")
     assert config.data_dir() == "D:/tmp/x"
+
+
+def test_search_keywords_default(monkeypatch):
+    monkeypatch.delenv("AI_PROC_KEYWORDS", raising=False)
+    assert config.search_keywords() == ["大学", "学院", "高校", "学校", "职业院校", "高职"]
+
+
+def test_search_keywords_env_override(monkeypatch):
+    monkeypatch.setenv("AI_PROC_KEYWORDS", " 教育 , 设备,采购 ")
+    assert config.search_keywords() == ["教育", "设备", "采购"]
+
+
+def test_search_keywords_empty_env_falls_back(monkeypatch):
+    monkeypatch.setenv("AI_PROC_KEYWORDS", "  , ")
+    assert config.search_keywords() == ["大学", "学院", "高校", "学校", "职业院校", "高职"]

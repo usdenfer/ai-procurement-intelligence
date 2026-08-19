@@ -25,3 +25,12 @@ def embedding_api_key() -> str:
 
 def data_dir() -> str:
     return os.environ.get("AI_PROC_DATA_DIR", "data")
+
+
+DEFAULT_KEYWORDS = ["大学", "学院", "高校", "学校", "职业院校", "高职"]
+
+
+def search_keywords() -> list[str]:
+    raw = os.environ.get("AI_PROC_KEYWORDS", "")
+    keywords = [k.strip() for k in raw.split(",") if k.strip()]
+    return keywords or DEFAULT_KEYWORDS
