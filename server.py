@@ -119,6 +119,7 @@ app = FastAPI(title="AI 采购情报", lifespan=lifespan)
 
 class AskRequest(BaseModel):
     question: str
+    top_k: int | None = None
 
 
 class SettingsUpdate(BaseModel):
@@ -180,9 +181,11 @@ async def ingest_status() -> dict:
 @app.post("/api/ask")
 async def ask_endpoint(req: AskRequest) -> dict:
     from ask import ask
+    from config import ask_top_k
     from store import Store
 
     question = req.question.strip()
     if not question:
         return {"answer": "问题不能为空。", "sources": []}
-    return await ask(question, Store())
+    top_k = req.top_k if req.top_k and req.top_k > 0 else ask_top_k()
+    return await ask(question, Store(), top_k=top_k)

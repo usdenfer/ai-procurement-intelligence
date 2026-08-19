@@ -108,3 +108,15 @@ def schedule_time() -> tuple[int, int]:
     if not (0 <= hour <= 23 and 0 <= minute <= 59):
         return 17, 0
     return hour, minute
+
+
+DEFAULT_ASK_TOP_K = 20
+
+
+def ask_top_k() -> int:
+    raw = os.environ.get("AI_PROC_ASK_TOP_K", "")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_ASK_TOP_K
+    return value if value > 0 else DEFAULT_ASK_TOP_K

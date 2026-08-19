@@ -141,3 +141,14 @@ def test_schedule_time_default_and_override(monkeypatch):
     assert config.schedule_time() == (17, 0)
     monkeypatch.setenv("AI_PROC_SCHEDULE_TIME", "25:00")
     assert config.schedule_time() == (17, 0)
+
+
+def test_ask_top_k_default_and_override(monkeypatch):
+    monkeypatch.delenv("AI_PROC_ASK_TOP_K", raising=False)
+    assert config.ask_top_k() == 20
+    monkeypatch.setenv("AI_PROC_ASK_TOP_K", "30")
+    assert config.ask_top_k() == 30
+    monkeypatch.setenv("AI_PROC_ASK_TOP_K", "bad")
+    assert config.ask_top_k() == 20
+    monkeypatch.setenv("AI_PROC_ASK_TOP_K", "0")
+    assert config.ask_top_k() == 20

@@ -23,7 +23,7 @@ def _build_user(question: str, hits: list[dict]) -> str:
     return f"公告片段：\n{context}\n\n问题：{question}"
 
 
-async def ask(question: str, store, top_k: int = 5) -> dict:
+async def ask(question: str, store, top_k: int = 20) -> dict:
     vectors = await embed([question])
     hits = store.query(vectors[0], top_k=top_k)
     if not hits:
