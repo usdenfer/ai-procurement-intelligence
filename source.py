@@ -42,13 +42,13 @@ async def pages(
     keywords: list[str] | None = None,
     on_progress=None,
     start_urls: list[str] | None = None,
-) -> AsyncIterator[tuple[str, str, str, str]]:
-    """Yield (url, html, title, published_date) across all configured sources.
+) -> AsyncIterator[tuple[str, str, str, str, str]]:
+    """Yield (url, html, title, published_date, district) across sources.
 
     走 discovery 引擎：先用静态 BFS 抓首页建立 base_result（用于识别站点
     适配器），再让适配器对应的 Provider 用给定关键词发现候选并抓取正文。
-    标题与发布日期取自候选元数据（Candidate.title_hint / published_date），
-    详情页 <title> 仅作回退。
+    标题/发布日期/地区取自候选元数据（Candidate.title_hint / published_date
+    / district），详情页 <title> 仅作回退。
     on_progress(dict) 在发现前/后各回调一次，用于报告阶段与候选数。
     start_urls 为空或 None 时回退到配置默认。
     """
@@ -89,4 +89,9 @@ async def pages(
                 if candidate is not None
                 else ""
             )
-            yield page.url, page.html, title, date
+            district = (
+                candidate.district or ""
+                if candidate is not None
+                else ""
+            )
+            yield page.url, page.html, title, date, district

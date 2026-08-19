@@ -10,20 +10,20 @@ from store import Store
 
 
 async def ingest(source, store: Store, embed_fn=embed, on_progress=None) -> dict:
-    """Consume (url, html, title, date) pages into the store.
+    """Consume (url, html, title, date, district) pages into the store.
 
     Returns counts: {"documents": int, "chunks": int, "errors": int}.
     on_progress(dict) is called after each page with the running counts.
     """
     counts = {"documents": 0, "chunks": 0, "errors": 0}
-    async for url, html, title, date in source:
+    async for url, html, title, date, district in source:
         try:
             text = clean_text(html)
-            chunks = chunk_document(url, text, title, date)
+            chunks = chunk_document(url, text, title, date, district)
             if not chunks:
                 continue
             vectors = await embed_fn([c.text for c in chunks])
-            doc_id = store.save_document(url, text, title, date)
+            doc_id = store.save_document(url, text, title, date, district)
             store.upsert_chunks(doc_id, chunks, vectors)
             counts["documents"] += 1
             counts["chunks"] += len(chunks)

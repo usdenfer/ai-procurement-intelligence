@@ -46,6 +46,7 @@ def test_pages_forwards_keywords_and_uses_candidate_meta(monkeypatch):
         source="yngp-api",
         title_hint="某某大学设备采购项目",
         published_date="2026-08-01",
+        district="昆明市",
     )
 
     async def fake_crawl(start_url, depth=1, render=False, **kwargs):
@@ -70,7 +71,7 @@ def test_pages_forwards_keywords_and_uses_candidate_meta(monkeypatch):
 
     pages = _collect(source.pages(["大学", "学院"]))
     assert pages == [
-        (article.url, article.html, "某某大学设备采购项目", "2026-08-01")
+        (article.url, article.html, "某某大学设备采购项目", "2026-08-01", "昆明市")
     ]
 
 
@@ -96,7 +97,7 @@ def test_pages_falls_back_to_page_title_without_candidate(monkeypatch):
     monkeypatch.setattr(discovery, "discover_pages", fake_discover)
 
     pages = _collect(source.pages(["大学"]))
-    assert pages == [(article.url, article.html, "公告一", "")]
+    assert pages == [(article.url, article.html, "公告一", "", "")]
 
 
 def test_pages_defaults_to_configured_keywords(monkeypatch):

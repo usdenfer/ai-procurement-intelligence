@@ -25,9 +25,17 @@ class Store:
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS documents ("
             " id TEXT PRIMARY KEY, url TEXT NOT NULL, title TEXT,"
-            " published_date TEXT, clean_text TEXT NOT NULL,"
-            " ingested_at TEXT NOT NULL)"
+            " published_date TEXT, district TEXT DEFAULT '',"
+            " clean_text TEXT NOT NULL, ingested_at TEXT NOT NULL)"
         )
+        columns = [
+            row[1]
+            for row in self.conn.execute("PRAGMA table_info(documents)")
+        ]
+        if "district" not in columns:
+            self.conn.execute(
+                "ALTER TABLE documents ADD COLUMN district TEXT DEFAULT ''"
+            )
         self.chroma = chroma_client or chromadb.PersistentClient(
             path=str(self.root / "chroma")
         )
@@ -36,20 +44,26 @@ class Store:
         )
 
     def save_document(
-        self, url: str, clean_text: str, title: str, published_date: str
+        self,
+        url: str,
+        clean_text: str,
+        title: str,
+        published_date: str,
+        district: str = "",
     ) -> str:
         doc_id = _doc_id(url)
         now = datetime.now(timezone.utc).isoformat()
         self.conn.execute(
             "INSERT INTO documents"
-            "(id, url, title, published_date, clean_text, ingested_at)"
-            " VALUES(?,?,?,?,?,?)"
+            "(id, url, title, published_date, district, clean_text, ingested_at)"
+            " VALUES(?,?,?,?,?,?,?)"
             " ON CONFLICT(id) DO UPDATE SET"
             " clean_text=excluded.clean_text,"
             " title=excluded.title,"
             " published_date=excluded.published_date,"
+            " district=excluded.district,"
             " ingested_at=excluded.ingested_at",
-            (doc_id, url, title, published_date, clean_text, now),
+            (doc_id, url, title, published_date, district, clean_text, now),
         )
         self.conn.commit()
         return doc_id
@@ -76,5 +90,9 @@ class Store:
         metas = result.get("metadatas") or [[]]
         out: list[dict] = []
         for doc, meta in zip(docs[0], metas[0]):
-            out.append({"text": doc, "url": (meta or {}).get("url", "")})
+            out.append({
+                "text": doc,
+                "url": (meta or {}).get("url", ""),
+                "district": (meta or {}).get("district", ""),
+            })
         return out

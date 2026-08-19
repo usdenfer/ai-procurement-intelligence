@@ -17,7 +17,8 @@ _SYSTEM = (
 def _build_user(question: str, hits: list[dict]) -> str:
     blocks = []
     for hit in hits:
-        blocks.append(f"来源：{hit['url']}\n内容：{hit['text']}")
+        location = f"（{hit['district']}）" if hit.get("district") else ""
+        blocks.append(f"来源：{hit['url']}{location}\n内容：{hit['text']}")
     context = "\n\n".join(blocks) if blocks else "（无相关公告片段）"
     return f"公告片段：\n{context}\n\n问题：{question}"
 

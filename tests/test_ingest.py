@@ -26,8 +26,8 @@ def make_store(tmp_path):
 
 def test_ingest_persists_documents_and_chunks(tmp_path, monkeypatch):
     pages = [
-        ("https://x.test/a", "<html><p>公告正文A</p></html>", "标题A", "2026-08-01"),
-        ("https://x.test/b", "<html><p>公告正文B</p></html>", "标题B", "2026-08-02"),
+        ("https://x.test/a", "<html><p>公告正文A</p></html>", "标题A", "2026-08-01", "昆明市"),
+        ("https://x.test/b", "<html><p>公告正文B</p></html>", "标题B", "2026-08-02", "红河州"),
     ]
     s = make_store(tmp_path)
     counts = asyncio.run(ingest.ingest(FakeSource(pages), s, _embed_fake))
@@ -37,6 +37,10 @@ def test_ingest_persists_documents_and_chunks(tmp_path, monkeypatch):
     ).fetchone()
     assert row[0] == 2
     assert s.collection.count() == 2
+    district = s.conn.execute(
+        "SELECT district FROM documents WHERE url=?", ("https://x.test/a",)
+    ).fetchone()
+    assert district[0] == "昆明市"
 
 
 def test_ingest_skips_failed_clean_but_keeps_others(tmp_path, monkeypatch):
@@ -44,7 +48,7 @@ def test_ingest_skips_failed_clean_but_keeps_others(tmp_path, monkeypatch):
         raise RuntimeError("clean failed")
 
     monkeypatch.setattr(ingest, "clean_text", broken_clean)
-    pages = [("https://x.test/a", "<html>x</html>", "", "")]
+    pages = [("https://x.test/a", "<html>x</html>", "", "", "")]
     s = make_store(tmp_path)
     counts = asyncio.run(ingest.ingest(FakeSource(pages), s, _embed_fake))
     assert counts == {"documents": 0, "chunks": 0, "errors": 1}
@@ -54,7 +58,7 @@ def test_ingest_skips_failed_embed_but_keeps_others(tmp_path, monkeypatch):
     async def broken_embed(texts):
         raise RuntimeError("embed failed")
 
-    pages = [("https://x.test/a", "<html><p>x</p></html>", "", "")]
+    pages = [("https://x.test/a", "<html><p>x</p></html>", "", "", "")]
     s = make_store(tmp_path)
     counts = asyncio.run(ingest.ingest(FakeSource(pages), s, broken_embed))
     assert counts == {"documents": 0, "chunks": 0, "errors": 1}

@@ -14,6 +14,7 @@ class Chunk:
     title: str
     published_date: str
     index: int
+    district: str = ""
 
     def metadata(self) -> dict:
         return {
@@ -21,6 +22,7 @@ class Chunk:
             "title": self.title,
             "published_date": self.published_date,
             "chunk_index": self.index,
+            "district": self.district,
         }
 
 
@@ -48,11 +50,12 @@ def chunk_document(
     clean_text: str,
     title: str = "",
     published_date: str = "",
+    district: str = "",
 ) -> list[Chunk]:
     parts = _split_long_text(clean_text)
     return [
         Chunk(text=part, url=url, title=title,
-              published_date=published_date, index=i)
+              published_date=published_date, index=i, district=district)
         for i, part in enumerate(parts)
         if part.strip()
     ]
