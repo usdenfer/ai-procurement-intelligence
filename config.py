@@ -64,3 +64,18 @@ def start_urls() -> list[str]:
     raw = os.environ.get("AI_PROC_START_URLS", "")
     urls = [u.strip() for u in raw.split(",") if u.strip()]
     return urls or DEFAULT_START_URLS
+
+
+def interval_hours() -> float:
+    raw = os.environ.get("AI_PROC_INTERVAL_HOURS", "24")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return 24.0
+    return value if value > 0 else 24.0
+
+
+def schedule_enabled() -> bool:
+    return os.environ.get(
+        "AI_PROC_SCHEDULE_ENABLED", "0"
+    ).strip().lower() in {"1", "true", "yes", "on"}

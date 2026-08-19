@@ -96,3 +96,21 @@ def test_start_urls_env_override(monkeypatch):
         "http://www.yngp.com/",
         "https://www.zycg.gov.cn/",
     ]
+
+
+def test_interval_hours_default_and_override(monkeypatch):
+    monkeypatch.delenv("AI_PROC_INTERVAL_HOURS", raising=False)
+    assert config.interval_hours() == 24.0
+    monkeypatch.setenv("AI_PROC_INTERVAL_HOURS", "6")
+    assert config.interval_hours() == 6.0
+    monkeypatch.setenv("AI_PROC_INTERVAL_HOURS", "bad")
+    assert config.interval_hours() == 24.0
+
+
+def test_schedule_enabled(monkeypatch):
+    monkeypatch.delenv("AI_PROC_SCHEDULE_ENABLED", raising=False)
+    assert config.schedule_enabled() is False
+    monkeypatch.setenv("AI_PROC_SCHEDULE_ENABLED", "1")
+    assert config.schedule_enabled() is True
+    monkeypatch.setenv("AI_PROC_SCHEDULE_ENABLED", "no")
+    assert config.schedule_enabled() is False

@@ -4,3 +4,5 @@ httpx
 python-dotenv
 beautifulsoup4
 playwright
+fastapi>=0.141,<0.142
+uvicorn[standard]
