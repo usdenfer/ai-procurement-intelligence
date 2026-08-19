@@ -13,7 +13,12 @@ def _run(coro):
 
 
 def _client_factory(handler):
-    return lambda *a, **k: httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    real_client = httpx.AsyncClient
+
+    def factory(*args, **kwargs):
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    return factory
 
 
 def test_embed_returns_vectors_and_sends_payload(monkeypatch):
