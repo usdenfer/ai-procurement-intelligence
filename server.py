@@ -9,10 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-import _bootstrap
-_bootstrap.ensure_wkc()
-
-from config import interval_hours, schedule_enabled  # noqa: E402
+from config import interval_hours, schedule_enabled
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 

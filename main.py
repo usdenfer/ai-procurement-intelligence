@@ -5,9 +5,6 @@ import argparse
 import asyncio
 import time
 
-import _bootstrap
-_bootstrap.ensure_wkc()
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ai-procurement-intelligence")
