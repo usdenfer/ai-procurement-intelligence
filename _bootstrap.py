@@ -15,7 +15,7 @@ def _wkc_path() -> Path:
 
 def ensure_wkc() -> Path:
     path = _wkc_path()
-    if not path.exists():
+    if not path.is_dir():
         raise FileNotFoundError(
             f"web_keyword_catcher not found at {path}; "
             "clone it alongside or set WKC_PATH"
