@@ -9,10 +9,11 @@ from embed import embed
 from store import Store
 
 
-async def ingest(source, store: Store, embed_fn=embed) -> dict:
+async def ingest(source, store: Store, embed_fn=embed, on_progress=None) -> dict:
     """Consume (url, html, title, date) pages into the store.
 
     Returns counts: {"documents": int, "chunks": int, "errors": int}.
+    on_progress(dict) is called after each page with the running counts.
     """
     counts = {"documents": 0, "chunks": 0, "errors": 0}
     async for url, html, title, date in source:
@@ -29,4 +30,6 @@ async def ingest(source, store: Store, embed_fn=embed) -> dict:
         except Exception:
             logging.exception("ingest failed for %s", url)
             counts["errors"] += 1
+        if on_progress is not None:
+            on_progress(dict(counts))
     return counts

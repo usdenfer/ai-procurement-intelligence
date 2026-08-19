@@ -13,7 +13,20 @@ from config import interval_hours, schedule_enabled
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-_ingest_state: dict = {"status": "idle", "counts": None, "error": None}
+_ingest_state: dict = {
+    "status": "idle",
+    "counts": None,
+    "error": None,
+    "phase": None,
+    "candidates_found": None,
+    "documents": 0,
+    "chunks": 0,
+    "errors": 0,
+}
+
+
+def _progress_cb(update: dict) -> None:
+    _ingest_state.update(update)
 
 
 async def _run_ingest() -> None:
@@ -21,9 +34,17 @@ async def _run_ingest() -> None:
     from source import pages
     from store import Store
 
-    _ingest_state.update(status="running", counts=None, error=None)
+    _ingest_state.update(
+        status="running", counts=None, error=None,
+        phase=None, candidates_found=None,
+        documents=0, chunks=0, errors=0,
+    )
     try:
-        counts = await ingest(pages(), Store())
+        counts = await ingest(
+            pages(on_progress=_progress_cb),
+            Store(),
+            on_progress=_progress_cb,
+        )
         _ingest_state.update(status="done", counts=counts)
     except Exception as exc:  # noqa: BLE001
         _ingest_state.update(status="error", error=str(exc))

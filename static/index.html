@@ -76,7 +76,15 @@
         el.className = "status";
         if (d.status === "running") {
           el.className = "status running";
-          el.textContent = "正在入库…";
+          if (d.phase === "discovering") {
+            el.textContent = "正在发现候选页面…";
+          } else if (d.phase === "ingesting") {
+            el.textContent = "发现 " + (d.candidates_found || 0) +
+              " 个候选，已入库 " + (d.documents || 0) +
+              " 篇（" + (d.chunks || 0) + " chunk，错误 " + (d.errors || 0) + "）";
+          } else {
+            el.textContent = "正在入库…";
+          }
           $("ingestBtn").disabled = true;
         } else if (d.status === "done") {
           el.textContent = "入库完成：" + JSON.stringify(d.counts);
