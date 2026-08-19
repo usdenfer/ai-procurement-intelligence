@@ -130,3 +130,14 @@ def test_schedule_enabled(monkeypatch):
     assert config.schedule_enabled() is True
     monkeypatch.setenv("AI_PROC_SCHEDULE_ENABLED", "no")
     assert config.schedule_enabled() is False
+
+
+def test_schedule_time_default_and_override(monkeypatch):
+    monkeypatch.delenv("AI_PROC_SCHEDULE_TIME", raising=False)
+    assert config.schedule_time() == (17, 0)
+    monkeypatch.setenv("AI_PROC_SCHEDULE_TIME", "09:30")
+    assert config.schedule_time() == (9, 30)
+    monkeypatch.setenv("AI_PROC_SCHEDULE_TIME", "bad")
+    assert config.schedule_time() == (17, 0)
+    monkeypatch.setenv("AI_PROC_SCHEDULE_TIME", "25:00")
+    assert config.schedule_time() == (17, 0)

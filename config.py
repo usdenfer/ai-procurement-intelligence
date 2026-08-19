@@ -97,3 +97,14 @@ def schedule_enabled() -> bool:
     return os.environ.get(
         "AI_PROC_SCHEDULE_ENABLED", "0"
     ).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def schedule_time() -> tuple[int, int]:
+    raw = os.environ.get("AI_PROC_SCHEDULE_TIME", "17:00")
+    try:
+        hour, minute = (int(part) for part in raw.split(":"))
+    except (ValueError, TypeError):
+        return 17, 0
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return 17, 0
+    return hour, minute

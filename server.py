@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from config import interval_hours, schedule_enabled
+from config import schedule_enabled, schedule_time
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -51,8 +51,15 @@ async def _run_ingest() -> None:
 
 
 async def _scheduler_loop() -> None:
+    from datetime import datetime, timedelta
+
+    hour, minute = schedule_time()
     while True:
-        await asyncio.sleep(interval_hours() * 3600)
+        now = datetime.now()
+        next_run = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if next_run <= now:
+            next_run += timedelta(days=1)
+        await asyncio.sleep((next_run - now).total_seconds())
         if _ingest_state["status"] != "running":
             await _run_ingest()
 
