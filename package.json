@@ -1,0 +1,11 @@
+{
+  "name": "ai-procurement-intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI 采购情报：多源采购公告采集 + RAG 问答",
+  "scripts": {
+    "serve": ".venv/Scripts/python.exe main.py serve",
+    "ingest": ".venv/Scripts/python.exe main.py ingest",
+    "schedule": ".venv/Scripts/python.exe main.py schedule"
+  }
+}

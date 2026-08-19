@@ -11,6 +11,11 @@ def test_build_parser_has_subcommands():
     args = parser.parse_args(["schedule"])
     assert args.command == "schedule"
     assert args.interval_hours is None
+    args = parser.parse_args(["serve"])
+    assert args.command == "serve"
+    assert args.port == 8000
+    args = parser.parse_args(["serve", "--port", "9000"])
+    assert args.port == 9000
 
 
 def test_interval_hours_parses_flag_and_env(monkeypatch):
