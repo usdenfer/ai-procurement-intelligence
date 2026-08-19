@@ -18,14 +18,21 @@ def _page_title(page) -> str:
 async def yngp_pages() -> AsyncIterator[tuple[str, str, str, str]]:
     """Yield (url, html, title, published_date) for yngp procurement notices.
 
-    Thin adapter over the reused crawler's archive deep-scan, which renders
-    category lists (full pagination) and statically fetches every article body.
+    yngp.com 的公告列表由 bootgrid AJAX 接口驱动，静态 HTML 里没有文章
+    链接，因此不能走裸 BFS 归档深扫。这里走 discovery 引擎 + YngpAdapter：
+    先用静态 BFS 抓首页建立 base_result（用于识别站点适配器），再让
+    YngpProvider 直接查询 JSON 列表接口（近 30 天，采购意向 + 招标公告），
+    最后静态抓取详情正文。
     """
     import _bootstrap
     _bootstrap.ensure_wkc()
 
-    from crawler import crawl_archive  # noqa: E402
+    from crawler import crawl  # noqa: E402
+    from discovery import discover_pages  # noqa: E402
 
-    result = await crawl_archive(YNGP_START)
-    for page in result.pages:
+    base_result = await crawl(YNGP_START, depth=1, render=False)
+    discovery_run = await discover_pages(
+        YNGP_START, [], base_result, 1, "auto"
+    )
+    for page in discovery_run.pages:
         yield page.url, page.html, _page_title(page), ""
