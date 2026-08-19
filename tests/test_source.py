@@ -6,7 +6,7 @@ _bootstrap.ensure_wkc()
 import crawler
 import discovery
 import source
-from discovery.models import DiscoveryStats
+from discovery.models import Candidate, DiscoveryStats
 
 
 def _collect(coro):
@@ -33,13 +33,19 @@ def test_extract_page_fields_title_missing():
     assert source._page_title(fake_page) == ""
 
 
-def test_yngp_pages_forwards_keywords(monkeypatch):
+def test_yngp_pages_forwards_keywords_and_uses_candidate_meta(monkeypatch):
     homepage = crawler.CrawledPage(
         url="http://www.yngp.com/", html="<html></html>"
     )
     article = crawler.CrawledPage(
         url="http://www.yngp.com/showBulletinInfo.html?bulletin_id=1",
-        html="<html><title>公告一</title><body>x</body></html>",
+        html="<html><title>通用标题</title><body>x</body></html>",
+    )
+    candidate = Candidate(
+        url=article.url,
+        source="yngp-api",
+        title_hint="某某大学设备采购项目",
+        published_date="2026-08-01",
     )
 
     async def fake_crawl(start_url, depth=1, render=False, **kwargs):
@@ -51,13 +57,41 @@ def test_yngp_pages_forwards_keywords(monkeypatch):
         assert keywords == ["大学", "学院"]
         assert base_result.pages[0].url == homepage.url
         return discovery.DiscoveryRun(
-            pages=[article], failed=[], stats=DiscoveryStats(), candidates=[]
+            pages=[article], failed=[], stats=DiscoveryStats(),
+            candidates=[candidate],
         )
 
     monkeypatch.setattr(crawler, "crawl", fake_crawl)
     monkeypatch.setattr(discovery, "discover_pages", fake_discover)
 
     pages = _collect(source.yngp_pages(["大学", "学院"]))
+    assert pages == [
+        (article.url, article.html, "某某大学设备采购项目", "2026-08-01")
+    ]
+
+
+def test_yngp_pages_falls_back_to_page_title_without_candidate(monkeypatch):
+    homepage = crawler.CrawledPage(
+        url="http://www.yngp.com/", html="<html></html>"
+    )
+    article = crawler.CrawledPage(
+        url="http://www.yngp.com/showBulletinInfo.html?bulletin_id=1",
+        html="<html><title>公告一</title><body>x</body></html>",
+    )
+
+    async def fake_crawl(start_url, depth=1, render=False, **kwargs):
+        return crawler.CrawlResult(pages=[homepage])
+
+    async def fake_discover(start_url, keywords, base_result, depth,
+                            render_mode, **kwargs):
+        return discovery.DiscoveryRun(
+            pages=[article], failed=[], stats=DiscoveryStats(), candidates=[]
+        )
+
+    monkeypatch.setattr(crawler, "crawl", fake_crawl)
+    monkeypatch.setattr(discovery, "discover_pages", fake_discover)
+
+    pages = _collect(source.yngp_pages(["大学"]))
     assert pages == [(article.url, article.html, "公告一", "")]
 
 

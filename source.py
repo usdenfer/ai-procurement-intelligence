@@ -23,14 +23,17 @@ async def yngp_pages(
     yngp.com 的公告列表由 bootgrid AJAX 接口驱动，静态 HTML 里没有文章
     链接，因此不能走裸 BFS 归档深扫。这里走 discovery 引擎 + YngpAdapter：
     先用静态 BFS 抓首页建立 base_result（用于识别站点适配器），再让
-    YngpProvider 用给定关键词查询 JSON 列表接口（近 30 天，采购意向 +
-    招标公告），最后静态抓取详情正文。未传关键词时回退到配置的默认词。
+    YngpProvider 用给定关键词查询 JSON 列表接口，最后静态抓取详情正文。
+
+    标题与发布日期取自接口返回的 bulletintitle / finishday（挂在
+    Candidate.title_hint / published_date 上），详情页 <title> 仅作回退。
     """
     import _bootstrap
     _bootstrap.ensure_wkc()
 
     from crawler import crawl  # noqa: E402
     from discovery import discover_pages  # noqa: E402
+    from discovery.urltools import normalize_candidate_url  # noqa: E402
 
     from config import search_keywords  # noqa: E402
 
@@ -40,5 +43,23 @@ async def yngp_pages(
     discovery_run = await discover_pages(
         YNGP_START, keywords, base_result, 1, "auto"
     )
+
+    meta = {}
+    for candidate in discovery_run.candidates:
+        key = normalize_candidate_url(candidate.url) or candidate.url
+        meta[key] = candidate
+
     for page in discovery_run.pages:
-        yield page.url, page.html, _page_title(page), ""
+        key = normalize_candidate_url(page.url) or page.url
+        candidate = meta.get(key)
+        title = (
+            candidate.title_hint
+            if candidate is not None and candidate.title_hint
+            else _page_title(page)
+        )
+        date = (
+            candidate.published_date or ""
+            if candidate is not None
+            else ""
+        )
+        yield page.url, page.html, title, date
