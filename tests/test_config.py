@@ -53,3 +53,13 @@ def test_search_keywords_env_override(monkeypatch):
 def test_search_keywords_empty_env_falls_back(monkeypatch):
     monkeypatch.setenv("AI_PROC_KEYWORDS", "  , ")
     assert config.search_keywords() == ["大学", "学院", "高校", "学校", "职业院校", "高职"]
+
+
+def test_query_types_default(monkeypatch):
+    monkeypatch.delenv("AI_PROC_QUERY_TYPES", raising=False)
+    assert config.query_types() == ("23", "1", "3")
+
+
+def test_query_types_env_override(monkeypatch):
+    monkeypatch.setenv("AI_PROC_QUERY_TYPES", " 23 , 1 ")
+    assert config.query_types() == ("23", "1")

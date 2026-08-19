@@ -34,3 +34,12 @@ def search_keywords() -> list[str]:
     raw = os.environ.get("AI_PROC_KEYWORDS", "")
     keywords = [k.strip() for k in raw.split(",") if k.strip()]
     return keywords or DEFAULT_KEYWORDS
+
+
+DEFAULT_QUERY_TYPES = ("23", "1", "3")
+
+
+def query_types() -> tuple[str, ...]:
+    raw = os.environ.get("AI_PROC_QUERY_TYPES", "")
+    types = tuple(t.strip() for t in raw.split(",") if t.strip())
+    return types or DEFAULT_QUERY_TYPES
