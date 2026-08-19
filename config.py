@@ -69,6 +69,12 @@ def max_windows() -> int:
     return value if value > 0 else DEFAULT_MAX_WINDOWS
 
 
+def full_sweep() -> bool:
+    return os.environ.get(
+        "AI_PROC_FULL_SWEEP", "0"
+    ).strip().lower() in {"1", "true", "yes", "on"}
+
+
 DEFAULT_START_URLS = ["http://www.yngp.com/"]
 
 

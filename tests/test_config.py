@@ -91,6 +91,13 @@ def test_max_windows_default_and_override(monkeypatch):
     assert config.max_windows() == 60
 
 
+def test_full_sweep(monkeypatch):
+    monkeypatch.delenv("AI_PROC_FULL_SWEEP", raising=False)
+    assert config.full_sweep() is False
+    monkeypatch.setenv("AI_PROC_FULL_SWEEP", "1")
+    assert config.full_sweep() is True
+
+
 def test_start_urls_default(monkeypatch):
     monkeypatch.delenv("AI_PROC_START_URLS", raising=False)
     assert config.start_urls() == ["http://www.yngp.com/"]

@@ -21,7 +21,12 @@ async def _discover_pages(start_url, keywords):
     from discovery import discover_pages  # noqa: E402
     from discovery.urltools import normalize_candidate_url  # noqa: E402
 
-    from config import max_windows, query_types, recent_days  # noqa: E402
+    from config import (  # noqa: E402
+        full_sweep,
+        max_windows,
+        query_types,
+        recent_days,
+    )
 
     base_result = await crawl(start_url, depth=1, render=False)
     return await discover_pages(
@@ -29,6 +34,7 @@ async def _discover_pages(start_url, keywords):
         query_types=query_types(),
         recent_days=recent_days(),
         max_windows_per_query=max_windows(),
+        full_sweep=full_sweep(),
     )
 
 
