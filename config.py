@@ -110,7 +110,7 @@ def schedule_time() -> tuple[int, int]:
     return hour, minute
 
 
-DEFAULT_ASK_TOP_K = 20
+DEFAULT_ASK_TOP_K = 40
 
 
 def ask_top_k() -> int:

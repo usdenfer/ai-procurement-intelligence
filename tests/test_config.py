@@ -145,13 +145,13 @@ def test_schedule_time_default_and_override(monkeypatch):
 
 def test_ask_top_k_default_and_override(monkeypatch):
     monkeypatch.delenv("AI_PROC_ASK_TOP_K", raising=False)
-    assert config.ask_top_k() == 20
+    assert config.ask_top_k() == 40
     monkeypatch.setenv("AI_PROC_ASK_TOP_K", "30")
     assert config.ask_top_k() == 30
     monkeypatch.setenv("AI_PROC_ASK_TOP_K", "bad")
-    assert config.ask_top_k() == 20
+    assert config.ask_top_k() == 40
     monkeypatch.setenv("AI_PROC_ASK_TOP_K", "0")
-    assert config.ask_top_k() == 20
+    assert config.ask_top_k() == 40
 
 
 def test_start_end_date(monkeypatch):

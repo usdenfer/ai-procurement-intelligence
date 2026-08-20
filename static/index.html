@@ -84,7 +84,7 @@
       <div class="row" style="align-items:center">
         <input type="text" id="question" placeholder="输入问题，例如：近期有哪些高校设备采购项目？">
         <span style="font-size:14px;color:#7a7a7a;white-space:nowrap">检索条数</span>
-        <input type="number" id="topK" value="20" min="1" max="100" style="width:70px;flex:none;margin-bottom:0">
+        <input type="number" id="topK" value="40" min="1" max="200" style="width:70px;flex:none;margin-bottom:0">
         <button id="askBtn">提问</button>
       </div>
       <div class="row" style="align-items:center;margin-top:8px">
@@ -209,7 +209,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             question: q,
-            top_k: parseInt($("topK").value) || 20,
+            top_k: parseInt($("topK").value) || 40,
             start_date: $("qStartDate").value || null,
             end_date: $("qEndDate").value || null,
           }),

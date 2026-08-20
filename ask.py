@@ -9,7 +9,9 @@ from ai import chat  # noqa: E402
 from embed import embed  # noqa: E402
 
 _SYSTEM = (
-    "你是采购公告问答助手。只根据给定的公告片段回答，"
+    "你是采购公告问答助手。只根据给定的公告片段回答。"
+    "如果问题要求列出/盘点/查询多个项目或公告，请逐条列出所有相关的公告"
+    "（每条含名称、关键信息、地区、日期），不要遗漏、不要只挑其中几个。"
     "引用来源时附上片段对应的完整 URL。内容不足时明确说明，不要编造。"
 )
 
@@ -26,7 +28,7 @@ def _build_user(question: str, hits: list[dict]) -> str:
 async def ask(
     question: str,
     store,
-    top_k: int = 20,
+    top_k: int = 40,
     start_date: str | None = None,
     end_date: str | None = None,
 ) -> dict:
@@ -40,6 +42,6 @@ async def ask(
         {"role": "system", "content": _SYSTEM},
         {"role": "user", "content": _build_user(question, hits)},
     ]
-    answer = await chat(messages)
+    answer = await chat(messages, max_tokens=8000)
     sources = list(dict.fromkeys(h["url"] for h in hits if h["url"]))
     return {"answer": answer, "sources": sources}
