@@ -68,6 +68,15 @@
         </div>
       </div>
       <div class="field">
+        <label>问答配置（默认值，问答区可临时覆盖）</label>
+        <div class="row" style="align-items:center">
+          <span style="font-size:14px;color:#7a7a7a;white-space:nowrap">检索条数</span>
+          <input type="number" id="settingsTopK" min="1" max="500" style="width:80px;flex:none;margin-bottom:0">
+          <span style="font-size:14px;color:#7a7a7a;white-space:nowrap;margin-left:8px">回答长度</span>
+          <input type="number" id="settingsMaxTokens" min="1" max="16000" style="width:100px;flex:none;margin-bottom:0">
+        </div>
+      </div>
+      <div class="field">
         <label>定时入库</label>
         <div class="row" style="align-items:center">
           <label class="switch-label"><input type="checkbox" id="scheduleOn"> 开启</label>
@@ -124,6 +133,8 @@
         $("scheduleTime").value = d.schedule_time || "17:00";
         $("startDateInput").value = d.start_date || "";
         $("endDateInput").value = d.end_date || "";
+        $("settingsTopK").value = d.top_k || 40;
+        $("settingsMaxTokens").value = d.max_tokens || 12000;
         $("scheduleInfo").textContent = d.schedule_enabled
           ? "已开启，下次执行：" + d.next_run
           : "已关闭";
@@ -142,6 +153,8 @@
             schedule_time: $("scheduleTime").value.trim(),
             start_date: $("startDateInput").value,
             end_date: $("endDateInput").value,
+            top_k: parseInt($("settingsTopK").value) || 40,
+            max_tokens: parseInt($("settingsMaxTokens").value) || 12000,
           }),
         });
         const d = await r.json();

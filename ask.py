@@ -31,6 +31,7 @@ async def ask(
     top_k: int = 40,
     start_date: str | None = None,
     end_date: str | None = None,
+    max_tokens: int = 12000,
 ) -> dict:
     vectors = await embed([question])
     hits = store.query(
@@ -42,6 +43,6 @@ async def ask(
         {"role": "system", "content": _SYSTEM},
         {"role": "user", "content": _build_user(question, hits)},
     ]
-    answer = await chat(messages, max_tokens=8000)
+    answer = await chat(messages, max_tokens=max_tokens)
     sources = list(dict.fromkeys(h["url"] for h in hits if h["url"]))
     return {"answer": answer, "sources": sources}

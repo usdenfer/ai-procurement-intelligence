@@ -122,6 +122,18 @@ def ask_top_k() -> int:
     return value if value > 0 else DEFAULT_ASK_TOP_K
 
 
+DEFAULT_MAX_TOKENS = 12000
+
+
+def max_tokens() -> int:
+    raw = os.environ.get("AI_PROC_MAX_TOKENS", "")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_MAX_TOKENS
+    return value if value > 0 else DEFAULT_MAX_TOKENS
+
+
 def start_date() -> str:
     return os.environ.get("AI_PROC_START_DATE", "").strip()
 

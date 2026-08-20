@@ -14,6 +14,8 @@ from config import schedule_enabled as _cfg_schedule_enabled
 from config import schedule_time as _cfg_schedule_time
 from config import end_date as _cfg_end_date
 from config import start_date as _cfg_start_date
+from config import ask_top_k as _cfg_ask_top_k
+from config import max_tokens as _cfg_max_tokens
 
 import settings_store
 
@@ -40,6 +42,8 @@ def _default_settings() -> dict:
         "schedule_time": f"{hour:02d}:{minute:02d}",
         "start_date": _cfg_start_date(),
         "end_date": _cfg_end_date(),
+        "top_k": _cfg_ask_top_k(),
+        "max_tokens": _cfg_max_tokens(),
     }
 
 
@@ -128,6 +132,7 @@ class AskRequest(BaseModel):
     top_k: int | None = None
     start_date: str | None = None
     end_date: str | None = None
+    max_tokens: int | None = None
 
 
 class SettingsUpdate(BaseModel):
@@ -137,6 +142,8 @@ class SettingsUpdate(BaseModel):
     schedule_time: str | None = None
     start_date: str | None = None
     end_date: str | None = None
+    top_k: int | None = None
+    max_tokens: int | None = None
 
 
 @app.get("/")
@@ -175,6 +182,10 @@ async def update_settings(req: SettingsUpdate) -> dict:
         _settings["start_date"] = req.start_date.strip()
     if req.end_date is not None:
         _settings["end_date"] = req.end_date.strip()
+    if req.top_k is not None and req.top_k > 0:
+        _settings["top_k"] = req.top_k
+    if req.max_tokens is not None and req.max_tokens > 0:
+        _settings["max_tokens"] = req.max_tokens
     settings_store.save(_settings)
     return {**_settings, "next_run": _next_run()}
 
@@ -195,17 +206,22 @@ async def ingest_status() -> dict:
 @app.post("/api/ask")
 async def ask_endpoint(req: AskRequest) -> dict:
     from ask import ask
-    from config import ask_top_k
     from store import Store
 
     question = req.question.strip()
     if not question:
         return {"answer": "问题不能为空。", "sources": []}
-    top_k = req.top_k if req.top_k and req.top_k > 0 else ask_top_k()
+    top_k = req.top_k if req.top_k and req.top_k > 0 else _settings.get("top_k") or 40
+    max_tokens = (
+        req.max_tokens
+        if req.max_tokens and req.max_tokens > 0
+        else _settings.get("max_tokens") or 12000
+    )
     return await ask(
         question,
         Store(),
         top_k=top_k,
         start_date=req.start_date or None,
         end_date=req.end_date or None,
+        max_tokens=max_tokens,
     )

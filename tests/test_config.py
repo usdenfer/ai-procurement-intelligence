@@ -163,3 +163,12 @@ def test_start_end_date(monkeypatch):
     monkeypatch.setenv("AI_PROC_END_DATE", "2026-08-01")
     assert config.start_date() == "2026-07-01"
     assert config.end_date() == "2026-08-01"
+
+
+def test_max_tokens_default_and_override(monkeypatch):
+    monkeypatch.delenv("AI_PROC_MAX_TOKENS", raising=False)
+    assert config.max_tokens() == 12000
+    monkeypatch.setenv("AI_PROC_MAX_TOKENS", "16000")
+    assert config.max_tokens() == 16000
+    monkeypatch.setenv("AI_PROC_MAX_TOKENS", "bad")
+    assert config.max_tokens() == 12000
